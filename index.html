@@ -53,7 +53,7 @@
         .input-label { font-size: 0.75rem; font-weight: 800; color: #999; }
         .clr-text { font-size: 0.7rem; font-weight: 800; color: #bbb; cursor: pointer; text-decoration: underline; }
 
-        /* Fixed Placeholder Color for NG Words and Editor */
+        /* Fixed Placeholder Color */
         textarea::placeholder {
             color: #bbb !important;
             -webkit-text-fill-color: #bbb !important;
@@ -78,7 +78,6 @@
             line-height: 1.4;
         }
 
-        /* Updated Slider Max to 150 */
         .slider-container { display: flex; align-items: center; gap: 15px; }
         input[type="range"] {
             flex-grow: 1; -webkit-appearance: none; height: 6px;
@@ -108,7 +107,7 @@
             margin: 0 !important;
             font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
             font-size: 16px !important;
-            line-height: 1.7 !important;
+            line-height: 1.7 !important; /* Fixed line-height to sync layers */
             box-sizing: border-box !important;
             white-space: pre-wrap !important;
             word-wrap: break-word !important;
@@ -270,11 +269,13 @@
 
     function applySweep() {
         const text = editor.value;
+        // NG words splitting by various delimiters including full-width space
         const ngWords = ngInput.value.split(/[ ,、\s　\n]+/).map(w => w.trim()).filter(w => w !== "");
         const maxLen = parseInt(slider.value);
 
         document.getElementById('countChar').innerText = text.length;
 
+        // CRITICAL FIX: Split by both Japanese and English punctuation
         const sentences = text.split(/([。！？.!?\n])/);
         let longCount = 0;
         let ngCount = 0;
@@ -285,11 +286,13 @@
             let isDelimiter = /[。！？.!?\n]/.test(part);
             let content = part;
 
+            // Check length only for actual sentence content (not delimiters)
             if (!isDelimiter && part.trim().length > maxLen) {
                 content = `<span class="hl-long">${content}</span>`;
                 longCount++;
             }
 
+            // NG words highlight
             if (ngWords.length > 0) {
                 const escapedNg = ngWords.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
                 const regex = new RegExp(`(${escapedNg.join('|')})`, 'gi');
@@ -301,6 +304,7 @@
             processedHtml += content;
         }
 
+        // Sync backdrop content
         backdrop.innerHTML = processedHtml.replace(/\n/g, '<br>') + (text.endsWith('\n') ? '<br>&nbsp;' : ' '); 
         document.getElementById('countNg').innerText = ngCount;
         document.getElementById('countLong').innerText = longCount;
