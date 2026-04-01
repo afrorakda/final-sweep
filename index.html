@@ -53,7 +53,13 @@
         .input-label { font-size: 0.75rem; font-weight: 800; color: #999; }
         .clr-text { font-size: 0.7rem; font-weight: 800; color: #bbb; cursor: pointer; text-decoration: underline; }
 
-        /* Scrollable NG words area */
+        /* Fixed Placeholder Color for NG Words and Editor */
+        textarea::placeholder {
+            color: #bbb !important;
+            -webkit-text-fill-color: #bbb !important;
+            opacity: 1 !important;
+        }
+
         #ngWords {
             width: 100%;
             height: 60px;
@@ -67,12 +73,12 @@
             outline: none;
             resize: none;
             -webkit-appearance: none;
-            -webkit-text-fill-color: var(--main) !important;
+            -webkit-text-fill-color: var(--main);
             opacity: 1 !important;
             line-height: 1.4;
         }
 
-        /* Slider section */
+        /* Updated Slider Max to 150 */
         .slider-container { display: flex; align-items: center; gap: 15px; }
         input[type="range"] {
             flex-grow: 1; -webkit-appearance: none; height: 6px;
@@ -173,8 +179,6 @@
             border-radius: var(--radius); text-align: left; position: relative;
         }
         .close-x { position: absolute; top: 15px; right: 20px; font-size: 20px; color: #ccc; cursor: pointer; }
-
-        ::placeholder { color: #bbb !important; }
     </style>
 </head>
 <body>
@@ -197,7 +201,7 @@
                 <span class="input-label">MAX SENTENCE LENGTH</span>
             </div>
             <div class="slider-container">
-                <input type="range" id="maxLengthSlider" min="40" max="300" value="80" oninput="updateSlider(this.value)">
+                <input type="range" id="maxLengthSlider" min="40" max="150" value="80" oninput="updateSlider(this.value)">
                 <span class="slider-val" id="sliderVal">80</span>
             </div>
         </div>
@@ -266,13 +270,11 @@
 
     function applySweep() {
         const text = editor.value;
-        // Updated: Including full-width space in delimiters
         const ngWords = ngInput.value.split(/[ ,、\s　\n]+/).map(w => w.trim()).filter(w => w !== "");
         const maxLen = parseInt(slider.value);
 
         document.getElementById('countChar').innerText = text.length;
 
-        // Updated: Added . ! ? for English sentence detection
         const sentences = text.split(/([。！？.!?\n])/);
         let longCount = 0;
         let ngCount = 0;
@@ -283,13 +285,11 @@
             let isDelimiter = /[。！？.!?\n]/.test(part);
             let content = part;
 
-            // Long sentence check (ignoring delimiters)
             if (!isDelimiter && part.trim().length > maxLen) {
                 content = `<span class="hl-long">${content}</span>`;
                 longCount++;
             }
 
-            // NG word highlight
             if (ngWords.length > 0) {
                 const escapedNg = ngWords.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
                 const regex = new RegExp(`(${escapedNg.join('|')})`, 'gi');
@@ -301,7 +301,6 @@
             processedHtml += content;
         }
 
-        // Final sync: Force scroll sync and backdrop update
         backdrop.innerHTML = processedHtml.replace(/\n/g, '<br>') + (text.endsWith('\n') ? '<br>&nbsp;' : ' '); 
         document.getElementById('countNg').innerText = ngCount;
         document.getElementById('countLong').innerText = longCount;
@@ -310,7 +309,6 @@
     function showModal() { document.getElementById('modal').style.display = 'flex'; }
     function hideModal() { document.getElementById('modal').style.display = 'none'; }
     
-    // Initial sync
     window.addEventListener('load', applySweep);
 </script>
 
