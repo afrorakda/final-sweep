@@ -53,112 +53,99 @@
         .input-label { font-size: 0.75rem; font-weight: 800; color: #999; }
         .clr-text { font-size: 0.7rem; font-weight: 800; color: #bbb; cursor: pointer; text-decoration: underline; }
 
-        input[type="text"], textarea {
+        /* Scrollable NG words area */
+        #ngWords {
             width: 100%;
-            padding: 15px;
+            height: 60px;
+            padding: 12px;
             border: 2px solid var(--accent);
             border-radius: var(--radius);
             background: #fff;
-            font-size: 16px; /* iOS zoom prevention */
+            font-size: 14px;
             font-weight: 700;
             box-sizing: border-box;
             outline: none;
+            resize: none;
             -webkit-appearance: none;
             -webkit-text-fill-color: var(--main) !important;
             opacity: 1 !important;
+            line-height: 1.4;
         }
-        ::placeholder { color: #bbb !important; -webkit-text-fill-color: #bbb !important; }
 
+        /* Slider section */
         .slider-container { display: flex; align-items: center; gap: 15px; }
         input[type="range"] {
-            flex-grow: 1;
-            -webkit-appearance: none;
-            height: 6px;
-            background: var(--accent);
-            border-radius: 5px;
-            outline: none;
+            flex-grow: 1; -webkit-appearance: none; height: 6px;
+            background: var(--accent); border-radius: 5px; outline: none;
         }
         input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 20px; height: 20px;
-            background: var(--main);
-            border-radius: 50%;
-            cursor: pointer;
+            -webkit-appearance: none; width: 22px; height: 22px;
+            background: var(--main); border-radius: 50%; cursor: pointer;
         }
-        .slider-val { font-size: 1.1rem; font-weight: 800; min-width: 30px; text-align: right; }
+        .slider-val { font-size: 1.1rem; font-weight: 800; min-width: 35px; text-align: right; }
 
-        /* Editor Area - Strict Synchronization */
-        .editor-container {
+        /* Sync Logic for Ghost Removal */
+        .editor-wrapper {
             position: relative;
             text-align: left;
             margin-bottom: 25px;
+            border: 2px solid var(--accent);
+            border-radius: var(--radius);
+            background: var(--input-bg);
+            overflow: hidden;
         }
 
         .backdrop, #mainEditor {
-            width: 100%;
-            height: 400px;
-            padding: 15px !important; /* Force exact padding */
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+            width: 100% !important;
+            height: 400px !important;
+            padding: 20px !important;
+            margin: 0 !important;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
             font-size: 16px !important;
-            line-height: 1.6 !important;
+            line-height: 1.7 !important;
             box-sizing: border-box !important;
-            border: 2px solid var(--accent);
-            border-radius: var(--radius);
-            margin: 0;
-            white-space: pre-wrap;
-            word-wrap: break-word;
+            white-space: pre-wrap !important;
+            word-wrap: break-word !important;
+            border: none !important;
         }
 
         .backdrop {
-            position: absolute;
-            top: 0; left: 0;
-            background-color: var(--input-bg);
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            background-color: var(--input-bg) !important;
             color: transparent !important;
-            overflow-y: auto;
-            pointer-events: none;
-            z-index: 1;
-            border-color: transparent; /* Textarea's border is visible */
+            overflow-y: auto !important;
+            pointer-events: none !important;
+            z-index: 1 !important;
         }
 
-        textarea#mainEditor {
-            position: relative;
+        #mainEditor {
+            position: relative !important;
             background: transparent !important;
-            z-index: 2;
-            resize: none;
-            overflow-y: auto;
-            /* Reset iOS internal padding */
-            -webkit-padding-start: 15px;
-            -webkit-padding-end: 15px;
+            z-index: 2 !important;
+            resize: none !important;
+            outline: none !important;
+            overflow-y: auto !important;
+            color: var(--main) !important;
+            -webkit-appearance: none;
         }
 
         .floating-clr {
-            position: absolute;
-            right: 15px;
-            bottom: 15px;
-            z-index: 10;
-            background: var(--main);
-            color: #fff;
-            border: none;
-            border-radius: 50%;
-            width: 45px; height: 45px;
-            font-weight: 800; font-size: 0.75rem;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            position: absolute; right: 15px; bottom: 15px; z-index: 10;
+            background: var(--main); color: #fff; border: none; border-radius: 50%;
+            width: 48px; height: 48px; font-weight: 800; font-size: 0.75rem;
+            cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             display: none; align-items: center; justify-content: center;
         }
         .floating-clr.active { display: flex; }
 
-        /* Highlight Styles */
-        .hl-word { background-color: #ffeb3b; color: #000; border-radius: 3px; }
+        .hl-word { background-color: #ffeb3b; color: #000; border-radius: 2px; }
         .hl-long { border-bottom: 3px solid var(--warning); }
 
         .stats-bar {
-            display: flex;
-            justify-content: space-around;
-            background: var(--input-bg);
-            padding: 15px;
-            border-radius: var(--radius);
-            margin-bottom: 30px;
+            display: flex; justify-content: space-around;
+            background: var(--input-bg); padding: 15px; border-radius: var(--radius); margin-bottom: 30px;
         }
         .stat-item { display: flex; flex-direction: column; }
         .stat-val { font-size: 1.2rem; font-weight: 800; }
@@ -186,6 +173,8 @@
             border-radius: var(--radius); text-align: left; position: relative;
         }
         .close-x { position: absolute; top: 15px; right: 20px; font-size: 20px; color: #ccc; cursor: pointer; }
+
+        ::placeholder { color: #bbb !important; }
     </style>
 </head>
 <body>
@@ -200,7 +189,7 @@
                 <span class="input-label">NG WORDS (Split by space, comma, or 、)</span>
                 <span class="clr-text" onclick="clearInput('ngWords')">clr</span>
             </div>
-            <input type="text" id="ngWords" placeholder="e.g. basically very maybe" oninput="applySweep()">
+            <textarea id="ngWords" placeholder="e.g. basically very maybe" oninput="applySweep()"></textarea>
         </div>
         
         <div class="input-group" style="margin-bottom: 0;">
@@ -208,13 +197,13 @@
                 <span class="input-label">MAX SENTENCE LENGTH</span>
             </div>
             <div class="slider-container">
-                <input type="range" id="maxLengthSlider" min="40" max="200" value="80" oninput="updateSlider(this.value)">
+                <input type="range" id="maxLengthSlider" min="40" max="300" value="80" oninput="updateSlider(this.value)">
                 <span class="slider-val" id="sliderVal">80</span>
             </div>
         </div>
     </div>
 
-    <div class="editor-container">
+    <div class="editor-wrapper">
         <div id="backdrop" class="backdrop"></div>
         <textarea id="mainEditor" placeholder="Paste your draft here..." oninput="handleInput()" onscroll="syncScroll()" spellcheck="false"></textarea>
         <button id="floatClr" class="floating-clr" onclick="clearInput('mainEditor')">CLR</button>
@@ -277,13 +266,13 @@
 
     function applySweep() {
         const text = editor.value;
-        // NG words splitting by space, comma, or Japanese comma
-        const ngWords = ngInput.value.split(/[ ,、\n]+/).map(w => w.trim()).filter(w => w !== "");
+        // Updated: Including full-width space in delimiters
+        const ngWords = ngInput.value.split(/[ ,、\s　\n]+/).map(w => w.trim()).filter(w => w !== "");
         const maxLen = parseInt(slider.value);
 
         document.getElementById('countChar').innerText = text.length;
 
-        // Sentences splitting by JP and EN punctuation
+        // Updated: Added . ! ? for English sentence detection
         const sentences = text.split(/([。！？.!?\n])/);
         let longCount = 0;
         let ngCount = 0;
@@ -294,13 +283,13 @@
             let isDelimiter = /[。！？.!?\n]/.test(part);
             let content = part;
 
-            // Long sentence check
+            // Long sentence check (ignoring delimiters)
             if (!isDelimiter && part.trim().length > maxLen) {
                 content = `<span class="hl-long">${content}</span>`;
                 longCount++;
             }
 
-            // NG word check
+            // NG word highlight
             if (ngWords.length > 0) {
                 const escapedNg = ngWords.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
                 const regex = new RegExp(`(${escapedNg.join('|')})`, 'gi');
@@ -312,7 +301,7 @@
             processedHtml += content;
         }
 
-        // Final sync: preserve newlines for backdrop
+        // Final sync: Force scroll sync and backdrop update
         backdrop.innerHTML = processedHtml.replace(/\n/g, '<br>') + (text.endsWith('\n') ? '<br>&nbsp;' : ' '); 
         document.getElementById('countNg').innerText = ngCount;
         document.getElementById('countLong').innerText = longCount;
@@ -321,7 +310,7 @@
     function showModal() { document.getElementById('modal').style.display = 'flex'; }
     function hideModal() { document.getElementById('modal').style.display = 'none'; }
     
-    // Initial Sync for backdrop sizing
+    // Initial sync
     window.addEventListener('load', applySweep);
 </script>
 
