@@ -16,7 +16,6 @@
             --input-bg: #fafafa;
             --radius: 15px;
             --warning: #ff4d4d;
-            --highlight: #fff3cd;
         }
 
         body {
@@ -32,7 +31,7 @@
 
         .container {
             width: 100%;
-            max-width: 800px; /* PCでの視認性を考慮し広めに設定 */
+            max-width: 800px;
             padding: 40px 20px;
             box-sizing: border-box;
             text-align: center;
@@ -41,43 +40,54 @@
         h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; letter-spacing: -1px; }
         .subtitle { font-size: 0.85rem; color: #666; font-weight: 500; margin-bottom: 30px; }
 
-        /* Settings Grid */
-        .settings-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 15px;
+        /* Settings Area */
+        .settings-section {
+            background: var(--input-bg);
+            padding: 20px;
+            border-radius: var(--radius);
             margin-bottom: 20px;
-        }
-
-        @media (max-width: 600px) {
-            .settings-grid { grid-template-columns: 1fr; }
-        }
-
-        .input-label {
-            display: block;
             text-align: left;
-            font-size: 0.75rem;
-            font-weight: 800;
-            margin-bottom: 8px;
-            color: #999;
-            padding-left: 5px;
         }
 
-        input[type="text"], input[type="number"], textarea {
+        .input-group { margin-bottom: 15px; position: relative; }
+        .label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .input-label { font-size: 0.75rem; font-weight: 800; color: #999; }
+        .clr-text { font-size: 0.7rem; font-weight: 800; color: #bbb; cursor: pointer; text-decoration: underline; }
+
+        input[type="text"], textarea {
             width: 100%;
             padding: 15px;
             border: 2px solid var(--accent);
             border-radius: var(--radius);
-            background: var(--input-bg);
+            background: #fff;
             font-size: 0.95rem;
             font-weight: 700;
-            color: var(--main) !important;
             box-sizing: border-box;
             outline: none;
             -webkit-appearance: none;
             -webkit-text-fill-color: var(--main) !important;
             opacity: 1 !important;
         }
+        ::placeholder { color: #bbb !important; -webkit-text-fill-color: #bbb !important; }
+
+        /* Slider Styling */
+        .slider-container { display: flex; align-items: center; gap: 15px; }
+        input[type="range"] {
+            flex-grow: 1;
+            -webkit-appearance: none;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 5px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px; height: 20px;
+            background: var(--main);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .slider-val { font-size: 1.1rem; font-weight: 800; min-width: 30px; text-align: right; }
 
         /* Editor Area */
         .editor-container {
@@ -112,7 +122,30 @@
             line-height: 1.6;
             font-size: 1rem;
             resize: none;
+            padding: 15px;
         }
+
+        /* Floating Clear Button */
+        .floating-clr {
+            position: absolute;
+            right: 15px;
+            bottom: 15px;
+            z-index: 10;
+            background: var(--main);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            font-weight: 800;
+            font-size: 0.75rem;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .floating-clr.active { display: flex; }
 
         /* Highlight Styles */
         .hl-word { background-color: #ffeb3b; color: var(--main); border-radius: 3px; }
@@ -161,20 +194,30 @@
     <h1>Final Sweep</h1>
     <p class="subtitle">Highlight NG words and long sentences instantly.</p>
 
-    <div class="settings-grid">
-        <div>
-            <label class="input-label">NG WORDS (Comma separated)</label>
+    <div class="settings-section">
+        <div class="input-group">
+            <div class="label-row">
+                <span class="input-label">NG WORDS (Comma separated)</span>
+                <span class="clr-text" onclick="clearInput('ngWords')">clr</span>
+            </div>
             <input type="text" id="ngWords" placeholder="e.g. absolutely, very, maybe" oninput="applySweep()">
         </div>
-        <div>
-            <label class="input-label">MAX LENGTH (Chars)</label>
-            <input type="number" id="maxLength" value="60" oninput="applySweep()">
+        
+        <div class="input-group" style="margin-bottom: 0;">
+            <div class="label-row">
+                <span class="input-label">MAX SENTENCE LENGTH</span>
+            </div>
+            <div class="slider-container">
+                <input type="range" id="maxLengthSlider" min="40" max="150" value="60" oninput="updateSlider(this.value)">
+                <span class="slider-val" id="sliderVal">60</span>
+            </div>
         </div>
     </div>
 
     <div class="editor-container">
         <div id="backdrop" class="backdrop"></div>
         <textarea id="mainEditor" placeholder="Paste your draft here..." oninput="handleInput()" onscroll="syncScroll()"></textarea>
+        <button id="floatClr" class="floating-clr" onclick="clearInput('mainEditor')">CLR</button>
     </div>
 
     <div class="stats-bar">
@@ -208,11 +251,25 @@
     const editor = document.getElementById('mainEditor');
     const backdrop = document.getElementById('backdrop');
     const ngInput = document.getElementById('ngWords');
-    const lengthInput = document.getElementById('maxLength');
+    const floatClr = document.getElementById('floatClr');
+    const slider = document.getElementById('maxLengthSlider');
 
     function handleInput() {
         applySweep();
         syncScroll();
+        floatClr.classList.toggle('active', editor.value.length > 0);
+    }
+
+    function updateSlider(val) {
+        document.getElementById('sliderVal').innerText = val;
+        applySweep();
+    }
+
+    function clearInput(id) {
+        const target = document.getElementById(id);
+        target.value = '';
+        if (id === 'mainEditor') floatClr.classList.remove('active');
+        applySweep();
     }
 
     function syncScroll() {
@@ -222,43 +279,37 @@
     function applySweep() {
         const text = editor.value;
         const ngWords = ngInput.value.split(',').map(w => w.trim()).filter(w => w !== "");
-        const maxLen = parseInt(lengthInput.value) || 999;
+        const maxLen = parseInt(slider.value);
 
         document.getElementById('countChar').innerText = text.length;
 
-        // 1. 文ごとの分割と長文判定
-        // 句点、感嘆符、疑問符で分割（。！？）
         const sentences = text.split(/([。！？\n])/);
         let longCount = 0;
         let ngCount = 0;
-
         let processedHtml = "";
 
         for (let part of sentences) {
             if (!part) continue;
-            
-            let isSentence = /[。！？\n]/.test(part);
+            let isDelimiter = /[。！？\n]/.test(part);
             let content = part;
 
-            // 長文チェック (区切り文字以外)
-            if (!isSentence && part.length > maxLen) {
+            if (!isDelimiter && part.trim().length > maxLen) {
                 content = `<span class="hl-long">${content}</span>`;
                 longCount++;
             }
 
-            // NGワードチェック
             if (ngWords.length > 0) {
-                const regex = new RegExp(`(${ngWords.join('|')})`, 'gi');
+                const escapedNg = ngWords.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+                const regex = new RegExp(`(${escapedNg.join('|')})`, 'gi');
                 content = content.replace(regex, (match) => {
                     ngCount++;
                     return `<span class="hl-word">${match}</span>`;
                 });
             }
-
             processedHtml += content;
         }
 
-        backdrop.innerHTML = processedHtml + "\n"; // 末尾の改行調整
+        backdrop.innerHTML = processedHtml.replace(/\n/g, '<br>') + " "; 
         document.getElementById('countNg').innerText = ngCount;
         document.getElementById('countLong').innerText = longCount;
     }
