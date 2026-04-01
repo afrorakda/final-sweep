@@ -40,7 +40,6 @@
         h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; letter-spacing: -1px; }
         .subtitle { font-size: 0.85rem; color: #666; font-weight: 500; margin-bottom: 30px; }
 
-        /* Settings Area */
         .settings-section {
             background: var(--input-bg);
             padding: 20px;
@@ -60,7 +59,7 @@
             border: 2px solid var(--accent);
             border-radius: var(--radius);
             background: #fff;
-            font-size: 0.95rem;
+            font-size: 16px; /* iOS zoom prevention */
             font-weight: 700;
             box-sizing: border-box;
             outline: none;
@@ -70,7 +69,6 @@
         }
         ::placeholder { color: #bbb !important; -webkit-text-fill-color: #bbb !important; }
 
-        /* Slider Styling */
         .slider-container { display: flex; align-items: center; gap: 15px; }
         input[type="range"] {
             flex-grow: 1;
@@ -89,43 +87,50 @@
         }
         .slider-val { font-size: 1.1rem; font-weight: 800; min-width: 30px; text-align: right; }
 
-        /* Editor Area */
+        /* Editor Area - Strict Synchronization */
         .editor-container {
             position: relative;
             text-align: left;
             margin-bottom: 25px;
         }
 
-        .backdrop {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 400px;
-            padding: 15px;
-            border: 2px solid transparent;
-            box-sizing: border-box;
-            background-color: var(--input-bg);
+        .backdrop, #mainEditor {
+            width: 100%;
+            height: 400px;
+            padding: 15px !important; /* Force exact padding */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+            font-size: 16px !important;
+            line-height: 1.6 !important;
+            box-sizing: border-box !important;
+            border: 2px solid var(--accent);
             border-radius: var(--radius);
-            color: transparent;
+            margin: 0;
             white-space: pre-wrap;
             word-wrap: break-word;
+        }
+
+        .backdrop {
+            position: absolute;
+            top: 0; left: 0;
+            background-color: var(--input-bg);
+            color: transparent !important;
             overflow-y: auto;
             pointer-events: none;
             z-index: 1;
-            font-size: 1rem;
-            line-height: 1.6;
+            border-color: transparent; /* Textarea's border is visible */
         }
 
         textarea#mainEditor {
             position: relative;
-            height: 400px;
-            background: transparent;
+            background: transparent !important;
             z-index: 2;
-            line-height: 1.6;
-            font-size: 1rem;
             resize: none;
-            padding: 15px;
+            overflow-y: auto;
+            /* Reset iOS internal padding */
+            -webkit-padding-start: 15px;
+            -webkit-padding-end: 15px;
         }
 
-        /* Floating Clear Button */
         .floating-clr {
             position: absolute;
             right: 15px;
@@ -135,23 +140,18 @@
             color: #fff;
             border: none;
             border-radius: 50%;
-            width: 45px;
-            height: 45px;
-            font-weight: 800;
-            font-size: 0.75rem;
+            width: 45px; height: 45px;
+            font-weight: 800; font-size: 0.75rem;
             cursor: pointer;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            display: none;
-            align-items: center;
-            justify-content: center;
+            display: none; align-items: center; justify-content: center;
         }
         .floating-clr.active { display: flex; }
 
         /* Highlight Styles */
-        .hl-word { background-color: #ffeb3b; color: var(--main); border-radius: 3px; }
+        .hl-word { background-color: #ffeb3b; color: #000; border-radius: 3px; }
         .hl-long { border-bottom: 3px solid var(--warning); }
 
-        /* Stats Bar */
         .stats-bar {
             display: flex;
             justify-content: space-around;
@@ -197,10 +197,10 @@
     <div class="settings-section">
         <div class="input-group">
             <div class="label-row">
-                <span class="input-label">NG WORDS (Comma separated)</span>
+                <span class="input-label">NG WORDS (Split by space, comma, or 、)</span>
                 <span class="clr-text" onclick="clearInput('ngWords')">clr</span>
             </div>
-            <input type="text" id="ngWords" placeholder="e.g. absolutely, very, maybe" oninput="applySweep()">
+            <input type="text" id="ngWords" placeholder="e.g. basically very maybe" oninput="applySweep()">
         </div>
         
         <div class="input-group" style="margin-bottom: 0;">
@@ -208,15 +208,15 @@
                 <span class="input-label">MAX SENTENCE LENGTH</span>
             </div>
             <div class="slider-container">
-                <input type="range" id="maxLengthSlider" min="40" max="150" value="60" oninput="updateSlider(this.value)">
-                <span class="slider-val" id="sliderVal">60</span>
+                <input type="range" id="maxLengthSlider" min="40" max="200" value="80" oninput="updateSlider(this.value)">
+                <span class="slider-val" id="sliderVal">80</span>
             </div>
         </div>
     </div>
 
     <div class="editor-container">
         <div id="backdrop" class="backdrop"></div>
-        <textarea id="mainEditor" placeholder="Paste your draft here..." oninput="handleInput()" onscroll="syncScroll()"></textarea>
+        <textarea id="mainEditor" placeholder="Paste your draft here..." oninput="handleInput()" onscroll="syncScroll()" spellcheck="false"></textarea>
         <button id="floatClr" class="floating-clr" onclick="clearInput('mainEditor')">CLR</button>
     </div>
 
@@ -266,8 +266,7 @@
     }
 
     function clearInput(id) {
-        const target = document.getElementById(id);
-        target.value = '';
+        document.getElementById(id).value = '';
         if (id === 'mainEditor') floatClr.classList.remove('active');
         applySweep();
     }
@@ -278,26 +277,30 @@
 
     function applySweep() {
         const text = editor.value;
-        const ngWords = ngInput.value.split(',').map(w => w.trim()).filter(w => w !== "");
+        // NG words splitting by space, comma, or Japanese comma
+        const ngWords = ngInput.value.split(/[ ,、\n]+/).map(w => w.trim()).filter(w => w !== "");
         const maxLen = parseInt(slider.value);
 
         document.getElementById('countChar').innerText = text.length;
 
-        const sentences = text.split(/([。！？\n])/);
+        // Sentences splitting by JP and EN punctuation
+        const sentences = text.split(/([。！？.!?\n])/);
         let longCount = 0;
         let ngCount = 0;
         let processedHtml = "";
 
         for (let part of sentences) {
             if (!part) continue;
-            let isDelimiter = /[。！？\n]/.test(part);
+            let isDelimiter = /[。！？.!?\n]/.test(part);
             let content = part;
 
+            // Long sentence check
             if (!isDelimiter && part.trim().length > maxLen) {
                 content = `<span class="hl-long">${content}</span>`;
                 longCount++;
             }
 
+            // NG word check
             if (ngWords.length > 0) {
                 const escapedNg = ngWords.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
                 const regex = new RegExp(`(${escapedNg.join('|')})`, 'gi');
@@ -309,13 +312,17 @@
             processedHtml += content;
         }
 
-        backdrop.innerHTML = processedHtml.replace(/\n/g, '<br>') + " "; 
+        // Final sync: preserve newlines for backdrop
+        backdrop.innerHTML = processedHtml.replace(/\n/g, '<br>') + (text.endsWith('\n') ? '<br>&nbsp;' : ' '); 
         document.getElementById('countNg').innerText = ngCount;
         document.getElementById('countLong').innerText = longCount;
     }
 
     function showModal() { document.getElementById('modal').style.display = 'flex'; }
     function hideModal() { document.getElementById('modal').style.display = 'none'; }
+    
+    // Initial Sync for backdrop sizing
+    window.addEventListener('load', applySweep);
 </script>
 
 </body>
