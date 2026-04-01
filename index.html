@@ -53,7 +53,6 @@
         .input-label { font-size: 0.75rem; font-weight: 800; color: #999; }
         .clr-text { font-size: 0.7rem; font-weight: 800; color: #bbb; cursor: pointer; text-decoration: underline; }
 
-        /* Fixed Placeholder Color */
         textarea::placeholder {
             color: #bbb !important;
             -webkit-text-fill-color: #bbb !important;
@@ -89,7 +88,6 @@
         }
         .slider-val { font-size: 1.1rem; font-weight: 800; min-width: 35px; text-align: right; }
 
-        /* Sync Logic for Ghost Removal */
         .editor-wrapper {
             position: relative;
             text-align: left;
@@ -107,7 +105,7 @@
             margin: 0 !important;
             font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
             font-size: 16px !important;
-            line-height: 1.7 !important; /* Fixed line-height to sync layers */
+            line-height: 1.7 !important;
             box-sizing: border-box !important;
             white-space: pre-wrap !important;
             word-wrap: break-word !important;
@@ -269,30 +267,31 @@
 
     function applySweep() {
         const text = editor.value;
-        // NG words splitting by various delimiters including full-width space
         const ngWords = ngInput.value.split(/[ ,、\s　\n]+/).map(w => w.trim()).filter(w => w !== "");
         const maxLen = parseInt(slider.value);
 
         document.getElementById('countChar').innerText = text.length;
 
-        // CRITICAL FIX: Split by both Japanese and English punctuation
+        // FIXED: Strict sentence splitting for EN/JP
         const sentences = text.split(/([。！？.!?\n])/);
         let longCount = 0;
         let ngCount = 0;
         let processedHtml = "";
 
-        for (let part of sentences) {
+        for (let i = 0; i < sentences.length; i++) {
+            let part = sentences[i];
             if (!part) continue;
+            
             let isDelimiter = /[。！？.!?\n]/.test(part);
             let content = part;
 
-            // Check length only for actual sentence content (not delimiters)
+            // Long sentence check (trimmed for accurate char count in EN)
             if (!isDelimiter && part.trim().length > maxLen) {
                 content = `<span class="hl-long">${content}</span>`;
                 longCount++;
             }
 
-            // NG words highlight
+            // NG word highlight
             if (ngWords.length > 0) {
                 const escapedNg = ngWords.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
                 const regex = new RegExp(`(${escapedNg.join('|')})`, 'gi');
@@ -304,7 +303,6 @@
             processedHtml += content;
         }
 
-        // Sync backdrop content
         backdrop.innerHTML = processedHtml.replace(/\n/g, '<br>') + (text.endsWith('\n') ? '<br>&nbsp;' : ' '); 
         document.getElementById('countNg').innerText = ngCount;
         document.getElementById('countLong').innerText = longCount;
